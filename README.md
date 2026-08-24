@@ -29,11 +29,10 @@ rails test
 
 ## Deploying to Heroku
 
-The app runs on the `heroku-24` stack with the Node and Ruby buildpacks:
+The app runs on the `heroku-24` stack. The Ruby buildpack is detected automatically and
+installs Node and Yarn itself, so no buildpack configuration is needed:
 
 ```bash
-heroku buildpacks:add heroku/nodejs
-heroku buildpacks:add heroku/ruby
 heroku config:set RAILS_MASTER_KEY=$(cat config/master.key)
 git push heroku master
 ```
