@@ -20,6 +20,8 @@ test:
   <<: *default
   database: db/test.sqlite3
 
+# Heroku provides DATABASE_URL, which Rails reads on top of these settings.
 production:
-  <<: *default
-  database: db/production.sqlite3
+  adapter: postgresql
+  encoding: unicode
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>

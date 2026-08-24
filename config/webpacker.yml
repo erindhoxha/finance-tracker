@@ -6,7 +6,6 @@ default: &default
   public_root_path: public
   public_output_path: packs
   cache_path: tmp/cache/webpacker
-  check_yarn_integrity: false
   webpack_compile_output: true
 
   # Additional paths webpack should lookup modules
@@ -51,10 +50,6 @@ default: &default
 development:
   <<: *default
   compile: true
-
-  # Disabled because node-sass is pinned to 9.x (see package.json resolutions) to build on Node 18/arm64,
-  # which the integrity check rejects against webpacker 4's expected ^4.13.0
-  check_yarn_integrity: false
 
   # Reference: https://webpack.js.org/configuration/dev-server/
   dev_server:

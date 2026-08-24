@@ -4,16 +4,16 @@ This is the finance tracker app from the Complete Ruby on Rails Developer course
 
 ## Requirements
 
-* Ruby 2.7.8
-* Rails 6.0.6.1
-* SQLite 3
-* Node 18 and Yarn 1.x (for Webpacker)
+* Ruby 3.1.0
+* Rails 6.1.7
+* SQLite 3 in development and test, PostgreSQL in production
+* Node 20 and Yarn 1.x (for Webpacker)
 
 ## Getting started
 
 ```bash
 bundle install
-yarn install --ignore-engines
+yarn install
 rails db:create
 rails db:migrate
 rails server
@@ -27,26 +27,34 @@ The app is then available at http://localhost:3000.
 rails test
 ```
 
-## Notes on running this old stack on modern machines
+## Deploying to Heroku
 
-Rails 6 and Webpacker 4 predate current Node, OpenSSL and Python releases, so a few
-pins are in place to keep the toolchain building:
+The app runs on the `heroku-24` stack with the Node and Ruby buildpacks:
 
+```bash
+heroku buildpacks:add heroku/nodejs
+heroku buildpacks:add heroku/ruby
+heroku config:set RAILS_MASTER_KEY=$(cat config/master.key)
+heroku addons:create heroku-postgresql:essential-0
+git push heroku master
+```
+
+`config/master.key` is deliberately not in git, so `RAILS_MASTER_KEY` has to be set as a
+config var or the app cannot decrypt its credentials and will fail to boot.
+
+The `Procfile` runs migrations on every release and boots Puma for the web dyno.
+
+## Notes on running this stack on modern machines
+
+Rails 6 predates current Ruby, Node and OpenSSL releases, so a few pins are in place:
+
+* **Ruby is 3.1.0, not the course's 2.7.8.** Ruby 2.7 is end-of-life and Heroku no longer
+  ships a binary for it on any current stack, so the app cannot deploy on 2.7. Rails 6.1 is
+  the earliest Rails 6 that supports Ruby 3.x.
 * `concurrent-ruby` is pinned to 1.3.4 in the `Gemfile`. Version 1.3.5 dropped its
-  implicit `require "logger"`, which Rails 6.0 relies on.
-* `node-sass` is pinned to 9.x via `resolutions` in `package.json` so it builds
-  against Node 18 on Apple Silicon. Webpacker's `check_yarn_integrity` is disabled
-  in `config/webpacker.yml` because it rejects that override.
+  implicit `require "logger"`, which Rails 6.1 relies on.
+* Webpacker is 5.4.4 rather than the course's 4.x. Webpacker 4 reads its YAML config in a
+  way that Psych 4 (bundled with Ruby 3.1) rejects, and 5.4 also replaces `node-sass` with
+  dart-sass, which removes the native build step entirely.
 * `bin/webpack` and `bin/webpack-dev-server` add `--openssl-legacy-provider` to
   `NODE_OPTIONS`, since webpack 4 hashes with md4 and OpenSSL 3 no longer provides it.
-* `node-sass` compiles through node-gyp, which needs Python's `distutils`. That was
-  removed in Python 3.12, so builds need a Python with `setuptools` installed:
-
-  ```bash
-  python3 -m venv ~/.venvs/nodegyp
-  ~/.venvs/nodegyp/bin/pip install "setuptools<81"
-  npm_config_python="$HOME/.venvs/nodegyp/bin/python" yarn install --ignore-engines
-  ```
-
-* `yarn install` needs `--ignore-engines` because some transitive dependencies now
-  declare Node 20+ engine requirements.
