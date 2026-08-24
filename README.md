@@ -35,14 +35,21 @@ The app runs on the `heroku-24` stack with the Node and Ruby buildpacks:
 heroku buildpacks:add heroku/nodejs
 heroku buildpacks:add heroku/ruby
 heroku config:set RAILS_MASTER_KEY=$(cat config/master.key)
-heroku addons:create heroku-postgresql:essential-0
 git push heroku master
 ```
 
 `config/master.key` is deliberately not in git, so `RAILS_MASTER_KEY` has to be set as a
 config var or the app cannot decrypt its credentials and will fail to boot.
 
-The `Procfile` runs migrations on every release and boots Puma for the web dyno.
+There is no database add-on yet, because nothing in the app queries one. Once the course
+introduces models, provision PostgreSQL and add the release-phase migration back:
+
+```bash
+heroku addons:create heroku-postgresql:essential-0
+echo 'release: bundle exec rails db:migrate' >> Procfile
+```
+
+Note that Heroku Postgres has no free tier, so this starts billing on the account.
 
 ## Notes on running this stack on modern machines
 
